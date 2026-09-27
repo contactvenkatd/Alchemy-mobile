@@ -1,0 +1,13 @@
+{
+  "name": "alchemy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Social commerce + community investment platform for tier 2-3 India",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix mobile install",
+    "api": "npm --prefix backend run dev:mem",
+    "api:mongo": "npm --prefix backend run dev",
+    "seed": "npm --prefix backend run seed",
+    "app": "npm --prefix mobile start"
+  }
+}
