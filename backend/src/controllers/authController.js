@@ -5,9 +5,27 @@ import { generateOtp, hashOtp, compareOtp, otpExpiry, sendOtpSms } from '../util
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
 
+/**
+ * E.164 (+<country code><number>). A bare 10-digit number is read as Indian,
+ * which is how older app builds send it.
+ */
 const phoneSchema = z
   .string()
-  .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number');
+  .trim()
+  .transform((v) => (/^[6-9]\d{9}$/.test(v) ? `+91${v}` : v))
+  .refine((v) => /^\+[1-9]\d{6,14}$/.test(v), 'Enter a valid mobile number with country code')
+  .refine((v) => !v.startsWith('+91') || /^\+91[6-9]\d{9}$/.test(v), 'Enter a valid 10-digit Indian mobile number');
+
+/**
+ * Indian users created before E.164 are stored as bare 10 digits. Match either
+ * form and upgrade the stored value on the next save.
+ */
+async function findByPhone(phone) {
+  const forms = phone.startsWith('+91') ? [phone, phone.slice(3)] : [phone];
+  const user = await User.findOne({ phone: { $in: forms } }).select('+otpHash +otpExpiresAt +otpAttempts');
+  if (user) user.phone = phone;
+  return user;
+}
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema,
@@ -29,7 +47,7 @@ export const verifyOtpSchema = z.object({
 export const requestOtp = asyncHandler(async (req, res) => {
   const { phone, referralCode } = req.body;
 
-  let user = await User.findOne({ phone }).select('+otpHash +otpExpiresAt +otpAttempts');
+  let user = await findByPhone(phone);
   let isNewUser = false;
 
   if (!user) {
@@ -48,7 +66,12 @@ export const requestOtp = asyncHandler(async (req, res) => {
   user.otpAttempts = 0;
   await user.save();
 
-  await sendOtpSms(phone, otp);
+  try {
+    await sendOtpSms(phone, otp);
+  } catch (err) {
+    console.error('[otp] SMS delivery failed:', err.message);
+    return res.status(502).json({ error: 'Could not send the OTP SMS. Try again shortly.' });
+  }
 
   res.json({
     message: 'OTP sent',
@@ -66,7 +89,7 @@ export const requestOtp = asyncHandler(async (req, res) => {
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { phone, otp, name, language, city } = req.body;
 
-  const user = await User.findOne({ phone }).select('+otpHash +otpExpiresAt +otpAttempts');
+  const user = await findByPhone(phone);
   if (!user) return res.status(404).json({ error: 'Number not registered. Request an OTP first.' });
 
   if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {

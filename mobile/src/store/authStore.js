@@ -48,10 +48,17 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  verifyOtp: async (payload) => {
+  verifyOtp: (payload) => get().startSession(() => authApi.verifyOtp({ ...payload, language: get().language })),
+
+  /** provider: 'google' | 'apple'; payload: { idToken, name?, referralCode? } */
+  socialSignIn: (provider, payload) =>
+    get().startSession(() => authApi[provider]({ ...payload, language: get().language })),
+
+  /** Runs a call that returns { token, user } and stores the session. */
+  startSession: async (call) => {
     set({ loading: true, error: null });
     try {
-      const { token, user } = await authApi.verifyOtp({ ...payload, language: get().language });
+      const { token, user } = await call();
       setAuthToken(token);
       await AsyncStorage.setItem(TOKEN_KEY, token);
       set({ token, user, loading: false });

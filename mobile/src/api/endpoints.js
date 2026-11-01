@@ -3,6 +3,8 @@ import { api } from './client.js';
 export const authApi = {
   requestOtp: (phone, referralCode) => api.post('/auth/request-otp', { phone, referralCode: referralCode || undefined }),
   verifyOtp: (payload) => api.post('/auth/verify-otp', payload),
+  google: (payload) => api.post('/auth/google', payload),
+  apple: (payload) => api.post('/auth/apple', payload),
   me: () => api.get('/auth/me'),
 };
 

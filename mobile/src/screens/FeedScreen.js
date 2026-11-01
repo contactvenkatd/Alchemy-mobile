@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Screen } from '../components/Screen.js';
 import { PostCard } from '../components/PostCard.js';
 import { StoriesRow } from '../components/StoriesRow.js';
@@ -11,6 +12,8 @@ import { useFeedStore } from '../store/feedStore.js';
 import { useStoryStore } from '../store/storyStore.js';
 import { useAuthStore, useT } from '../store/authStore.js';
 import { colors, spacing, type } from '../theme/index.js';
+
+const FAB_SIZE = 58;
 
 export default function FeedScreen({ navigation }) {
   const t = useT();
@@ -121,6 +124,22 @@ export default function FeedScreen({ navigation }) {
         windowSize={5}
         removeClippedSubviews
       />
+
+      <Pressable
+        onPress={() => navigation.navigate('CreatePost')}
+        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+        accessibilityRole="button"
+        accessibilityLabel={t('feed.newPost')}
+      >
+        <LinearGradient
+          colors={[colors.goldLight, colors.gold, colors.goldDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabFill}
+        >
+          <Ionicons name="add" size={30} color={colors.onGold} />
+        </LinearGradient>
+      </Pressable>
     </Screen>
   );
 }
@@ -139,5 +158,23 @@ const styles = StyleSheet.create({
   dmBadgeText: { fontFamily: type.price.fontFamily, fontSize: 10, color: colors.onGold },
   rule: { width: 44, height: 2, backgroundColor: colors.gold, borderRadius: 1, marginTop: spacing.sm },
   headerSub: { ...type.label, fontSize: 12, letterSpacing: 0.5, marginTop: spacing.sm },
-  list: { paddingTop: spacing.xs, paddingBottom: spacing.xl },
+  // Room at the bottom so the last post's actions clear the FAB.
+  list: { paddingTop: spacing.xs, paddingBottom: FAB_SIZE + spacing.xl * 2 },
+
+  // The tab bar sits below the screen body, so bottom offsets are already above it.
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    elevation: 8,
+    shadowColor: colors.gold,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  fabFill: { flex: 1, borderRadius: FAB_SIZE / 2, alignItems: 'center', justifyContent: 'center' },
+  fabPressed: { opacity: 0.9, transform: [{ scale: 0.96 }] },
 });

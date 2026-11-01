@@ -30,6 +30,10 @@ export default {
     invalidPhone: 'Enter a valid 10-digit mobile number',
     invalidOtp: 'Enter the 6-digit OTP',
     devOtpNotice: 'Dev OTP: {otp}',
+    continueWithPhone: 'Continue with Phone',
+    continueWithGoogle: 'Continue with Google',
+    continueWithApple: 'Continue with Apple',
+    or: 'or',
   },
   tabs: { feed: 'Feed', shop: 'Shop', wallet: 'Wallet', pool: 'Pool', profile: 'Profile' },
   feed: {
@@ -42,6 +46,14 @@ export default {
     post: 'Post',
     newPost: 'Share something',
     shared: 'Share link copied',
+  },
+  createPost: {
+    title: 'New post',
+    addPhotos: 'Add photos ({count}/{max})',
+    removePhoto: 'Remove photo',
+    photosNotUploaded: 'Photo upload is coming soon. Only your text will be posted for now.',
+    discardTitle: 'Discard this post?',
+    discard: 'Discard',
   },
   shop: {
     title: 'Shop',

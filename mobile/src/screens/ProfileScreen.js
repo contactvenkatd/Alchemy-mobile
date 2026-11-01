@@ -10,7 +10,7 @@ import { userApi } from '../api/endpoints.js';
 import { useAuthStore, useT } from '../store/authStore.js';
 import { LANGUAGES } from '../i18n/index.js';
 import { colors, radius, spacing, type } from '../theme/index.js';
-import { formatMoney, formatDate } from '../utils/format.js';
+import { formatMoney, formatDate, formatPhone } from '../utils/format.js';
 
 export default function ProfileScreen() {
   const t = useT();
@@ -66,7 +66,7 @@ export default function ProfileScreen() {
           <Avatar name={user?.name} uri={user?.avatarUrl} size={92} />
           <Text style={styles.name} numberOfLines={1}>{user?.name || '—'}</Text>
           <Text style={styles.meta} numberOfLines={1}>
-            +91 {user?.phone}{user?.city ? ` · ${user.city}` : ''}
+            {user?.phone ? formatPhone(user.phone) : user?.email}{user?.city ? ` · ${user.city}` : ''}
           </Text>
           <Text style={styles.metaFaint}>{t('profile.member', { date: formatDate(user?.createdAt, language) })}</Text>
         </View>

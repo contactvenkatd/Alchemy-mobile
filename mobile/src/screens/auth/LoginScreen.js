@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar,
+  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar,
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { GradientButton } from '../../components/GradientButton.js';
 import { CountryCodePicker, DEFAULT_COUNTRY } from '../../components/CountryCodePicker.js';
 import { useAuthStore, useT } from '../../store/authStore.js';
+import { isAppleAvailable, signInWithApple, signInWithGoogle } from '../../auth/social.js';
 import { LANGUAGES } from '../../i18n/index.js';
 import { colors, MAX_WIDTH, radius, spacing, type } from '../../theme/index.js';
 
@@ -15,6 +17,7 @@ export default function LoginScreen({ navigation }) {
   const language = useAuthStore((s) => s.language);
   const setLanguage = useAuthStore((s) => s.setLanguage);
   const requestOtp = useAuthStore((s) => s.requestOtp);
+  const socialSignIn = useAuthStore((s) => s.socialSignIn);
   const loading = useAuthStore((s) => s.loading);
 
   const [country, setCountry] = useState(DEFAULT_COUNTRY);
@@ -22,23 +25,48 @@ export default function LoginScreen({ navigation }) {
   const [referral, setReferral] = useState('');
   const [error, setError] = useState(null);
   const [focused, setFocused] = useState(null);
+  const [busy, setBusy] = useState(null); // 'phone' | 'google' | 'apple'
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    isAppleAvailable().then(setAppleAvailable);
+  }, []);
 
   const onSubmit = async () => {
     const clean = phone.replace(/\D/g, '');
 
-    // India is the only code the API accepts today; other countries get a
-    // length check so the field still behaves while that catches up.
+    // India has a known mobile prefix; other countries get a length check.
     const valid = country.code === '+91'
       ? /^[6-9]\d{9}$/.test(clean)
       : clean.length === country.digits;
     if (!valid) return setError(t('auth.invalidPhone'));
 
     setError(null);
+    setBusy('phone');
     try {
-      const res = await requestOtp(clean, referral.trim().toUpperCase());
-      navigation.navigate('Otp', { phone: clean, isNewUser: res.isNewUser, devOtp: res.devOtp });
+      const fullPhone = `${country.code}${clean}`;
+      const res = await requestOtp(fullPhone, referral.trim().toUpperCase());
+      navigation.navigate('Otp', { phone: fullPhone, isNewUser: res.isNewUser, devOtp: res.devOtp });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // RootNavigator swaps to the tabs as soon as the token lands in the store.
+  const onSocial = async (provider) => {
+    setError(null);
+    setBusy(provider);
+    try {
+      const credential = provider === 'google' ? await signInWithGoogle() : await signInWithApple();
+      if (credential) {
+        await socialSignIn(provider, { ...credential, referralCode: referral.trim().toUpperCase() || undefined });
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -100,12 +128,68 @@ export default function LoginScreen({ navigation }) {
               style={[styles.referralInput, focused === 'ref' && styles.inputFocused]}
             />
 
-            <GradientButton title={t('auth.sendOtp')} onPress={onSubmit} loading={loading} style={styles.cta} />
+            <GradientButton
+              title={t('auth.continueWithPhone')}
+              onPress={onSubmit}
+              loading={busy === 'phone'}
+              disabled={loading || !!busy}
+              style={styles.cta}
+            />
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>{t('auth.or')}</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <SocialButton
+              icon="logo-google"
+              title={t('auth.continueWithGoogle')}
+              onPress={() => onSocial('google')}
+              loading={busy === 'google'}
+              disabled={loading || !!busy}
+            />
+            {appleAvailable ? (
+              <SocialButton
+                icon="logo-apple"
+                title={t('auth.continueWithApple')}
+                onPress={() => onSocial('apple')}
+                loading={busy === 'apple'}
+                disabled={loading || !!busy}
+                variant="apple"
+              />
+            ) : null}
           </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/** variant: default (outlined, dark) | apple (solid white, per Apple's button guidelines) */
+function SocialButton({ icon, title, onPress, loading, disabled, variant }) {
+  const apple = variant === 'apple';
+  const fg = apple ? '#000' : colors.text;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.social,
+        apple && styles.socialApple,
+        disabled && !loading && styles.socialDisabled,
+        pressed && styles.socialPressed,
+      ]}
+    >
+      {loading ? <ActivityIndicator color={fg} /> : (
+        <>
+          <Ionicons name={icon} size={20} color={fg} />
+          <Text style={[styles.socialText, { color: fg }]} numberOfLines={1}>{title}</Text>
+        </>
+      )}
+    </Pressable>
   );
 }
 
@@ -192,4 +276,25 @@ const styles = StyleSheet.create({
   error: { ...type.caption, color: colors.danger, marginTop: spacing.xs },
 
   cta: { marginTop: spacing.lg },
+
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.sm },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  dividerText: { ...type.caption, color: colors.textMuted },
+
+  social: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    paddingHorizontal: spacing.md,
+  },
+  socialApple: { backgroundColor: '#fff', borderColor: '#fff' },
+  socialDisabled: { opacity: 0.45 },
+  socialPressed: { opacity: 0.85 },
+  socialText: { ...type.labelStrong, fontSize: 16 },
 });

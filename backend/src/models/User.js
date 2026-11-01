@@ -5,7 +5,11 @@ const nanoCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
 
 const userSchema = new mongoose.Schema(
   {
-    phone: { type: String, required: true, unique: true, index: true },
+    // Optional: Google/Apple users sign in without a phone. Sparse so many users can omit it.
+    phone: { type: String, unique: true, sparse: true },
+    email: { type: String, lowercase: true, trim: true, unique: true, sparse: true },
+    googleId: { type: String, unique: true, sparse: true, select: false },
+    appleId: { type: String, unique: true, sparse: true, select: false },
     name: { type: String, default: '' },
     language: { type: String, enum: ['en', 'hi'], default: 'hi' },
     city: { type: String, default: '' },
@@ -41,6 +45,7 @@ userSchema.methods.toPublic = function toPublic() {
   return {
     id: this._id,
     phone: this.phone,
+    email: this.email,
     name: this.name,
     language: this.language,
     city: this.city,

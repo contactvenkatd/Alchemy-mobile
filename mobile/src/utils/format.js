@@ -29,3 +29,8 @@ export function timeAgo(iso, lang = 'en') {
 export function initials(name = '') {
   return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
 }
+
+/** Phones are stored as E.164; bare 10-digit numbers are legacy Indian records. */
+export function formatPhone(phone = '') {
+  return /^\d{10}$/.test(phone) ? `+91${phone}` : phone;
+}

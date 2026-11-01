@@ -4,6 +4,7 @@ import { Screen } from '../../components/Screen.js';
 import { GradientButton } from '../../components/GradientButton.js';
 import { TextField } from '../../components/TextField.js';
 import { useAuthStore, useT } from '../../store/authStore.js';
+import { formatPhone } from '../../utils/format.js';
 import { colors, radius, spacing, type } from '../../theme/index.js';
 
 const RESEND_SECONDS = 30;
@@ -55,7 +56,7 @@ export default function OtpScreen({ route, navigation }) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>{t('auth.otpTitle')}</Text>
-          <Text style={styles.subtitle}>{t('auth.otpSubtitle', { phone: `+91 ${phone}` })}</Text>
+          <Text style={styles.subtitle}>{t('auth.otpSubtitle', { phone: formatPhone(phone) })}</Text>
 
           {devOtp ? <Text style={styles.devNotice}>{t('auth.devOtpNotice', { otp: devOtp })}</Text> : null}
 

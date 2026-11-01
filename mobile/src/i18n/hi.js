@@ -30,6 +30,10 @@ export default {
     invalidPhone: 'सही 10 अंकों का मोबाइल नंबर डालें',
     invalidOtp: '6 अंकों का OTP डालें',
     devOtpNotice: 'डेव OTP: {otp}',
+    continueWithPhone: 'फ़ोन से जारी रखें',
+    continueWithGoogle: 'Google से जारी रखें',
+    continueWithApple: 'Apple से जारी रखें',
+    or: 'या',
   },
   tabs: { feed: 'फीड', shop: 'दुकान', wallet: 'वॉलेट', pool: 'फंड', profile: 'प्रोफ़ाइल' },
   feed: {
@@ -42,6 +46,14 @@ export default {
     post: 'पोस्ट करें',
     newPost: 'कुछ साझा करें',
     shared: 'शेयर लिंक कॉपी हो गया',
+  },
+  createPost: {
+    title: 'नई पोस्ट',
+    addPhotos: 'फ़ोटो जोड़ें ({count}/{max})',
+    removePhoto: 'फ़ोटो हटाएँ',
+    photosNotUploaded: 'फ़ोटो अपलोड जल्द आ रहा है। अभी सिर्फ़ आपका टेक्स्ट पोस्ट होगा।',
+    discardTitle: 'यह पोस्ट हटाएँ?',
+    discard: 'हटाएँ',
   },
   shop: {
     title: 'दुकान',

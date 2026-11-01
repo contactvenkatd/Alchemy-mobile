@@ -5,6 +5,7 @@ import LoginScreen from '../screens/auth/LoginScreen.js';
 import OtpScreen from '../screens/auth/OtpScreen.js';
 import ProductDetailScreen from '../screens/ProductDetailScreen.js';
 import PostDetailScreen from '../screens/PostDetailScreen.js';
+import CreatePostScreen from '../screens/CreatePostScreen.js';
 import StoryViewerScreen from '../screens/StoryViewerScreen.js';
 import MessagesScreen from '../screens/MessagesScreen.js';
 import ChatScreen from '../screens/ChatScreen.js';
@@ -54,6 +55,7 @@ export function RootNavigator() {
             <Stack.Screen name="Tabs" component={TabNavigator} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
             <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+            <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ animation: 'slide_from_bottom' }} />
             <Stack.Screen name="Messages" component={MessagesScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen

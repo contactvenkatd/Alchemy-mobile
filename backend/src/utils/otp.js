@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
+import twilio from 'twilio';
+import { env } from '../config/env.js';
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 
@@ -20,7 +22,18 @@ export function otpExpiry() {
   return new Date(Date.now() + OTP_TTL_MS);
 }
 
-/** Swap this for an SMS gateway (MSG91 / Gupshup / Twilio) in production. */
+const { accountSid, authToken, fromNumber } = env.twilio;
+const smsClient = accountSid && authToken && fromNumber ? twilio(accountSid, authToken) : null;
+
+/** Sends via Twilio when fully configured; otherwise logs to the console for local dev. */
 export async function sendOtpSms(phone, otp) {
-  console.log(`[otp] ${phone} -> ${otp}`);
+  if (!smsClient) {
+    console.log(`[otp] ${phone} -> ${otp}`);
+    return;
+  }
+  await smsClient.messages.create({
+    to: phone, // already E.164
+    from: fromNumber,
+    body: `${otp} is your Alchemy verification code. It expires in 5 minutes.`,
+  });
 }

@@ -25,7 +25,13 @@
     },
     "scheme": "alchemy",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Alchemy needs your photos so you can add them to posts."
+        }
+      ]
     ]
   }
 }

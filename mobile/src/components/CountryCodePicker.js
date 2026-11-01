@@ -3,8 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { colors, radius, spacing, type } from '../theme/index.js';
 
 /**
- * The backend only accepts Indian numbers today (`/^[6-9]\d{9}$/`), so India
- * is the default and the rest are here for the signup flow to grow into.
+ * The phone is sent to the API as E.164: `${country.code}${digits}`.
  * `digits` drives client-side validation per country.
  */
 export const COUNTRIES = [
@@ -17,7 +16,8 @@ export const COUNTRIES = [
   { code: '+44', flag: '🇬🇧', name: 'United Kingdom', digits: 10 },
 ];
 
-export const DEFAULT_COUNTRY = COUNTRIES[0];
+// US while testing on a US number; switch back to India (COUNTRIES[0]) for launch.
+export const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === '+1');
 
 export function CountryCodePicker({ value, onChange, label }) {
   const [open, setOpen] = useState(false);
